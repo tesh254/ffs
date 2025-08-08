@@ -2,19 +2,18 @@ package agent
 
 import (
 	"ffs/core"
-	"ffs/diff"
 )
 
 // Suggestion represents a proposed change to a file, typically from an LLM agent.
+// It targets specific lines to be updated rather than replacing the entire file content.
 type Suggestion struct {
 	FilePath    string // The path to the file to be modified.
-	NewContent  string // The proposed new content for the file.
+	LineChanges string // A JSON string representing a map of line numbers to their new content.
 }
 
-// ApplySuggestion takes a suggestion, computes a patch, and applies it to the specified file.
-// It reads the original file, generates a diff against the suggested new content,
-// applies the resulting patch, and writes the updated content back to the file.
-// It returns the final content of the file after the patch has been applied.
+// ApplySuggestion takes a suggestion with line-specific changes and applies them to the file.
+// It reads the original file, applies the line changes, and writes the updated content back.
+// This approach is more precise and efficient than overwriting the entire file.
 func ApplySuggestion(suggestion Suggestion) (string, error) {
 	// Read the original file content
 	originalContent, err := core.ReadFile(suggestion.FilePath)
@@ -22,16 +21,13 @@ func ApplySuggestion(suggestion Suggestion) (string, error) {
 		return "", err
 	}
 
-	// Generate a diff between the original content and the new content
-	patch := diff.GenerateDiff(string(originalContent), suggestion.NewContent)
-
-	// Apply the patch
-	newContent, err := diff.ApplyPatch(string(originalContent), patch)
+	// Apply the patch to the original content
+	newContent, err := core.ApplyPatch(string(originalContent), suggestion.LineChanges)
 	if err != nil {
 		return "", err
 	}
 
-	// Write the new content to the file
+	// Write the new content back to the file
 	if err := core.WriteFile(suggestion.FilePath, []byte(newContent)); err != nil {
 		return "", err
 	}

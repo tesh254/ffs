@@ -10,7 +10,7 @@ import (
 func main() {
 	// Create a temporary file for the example
 	filePath := "example.txt"
-	originalContent := "This is a sample file for the ffs library."
+	originalContent := "This is a sample file for the ffs library.\nThis should be the second line for the ffs sample file"
 	if err := core.WriteFile(filePath, []byte(originalContent)); err != nil {
 		log.Fatalf("Failed to create initial file: %v", err)
 	}
@@ -20,10 +20,10 @@ func main() {
 	fmt.Println(originalContent)
 	fmt.Println("--------------------")
 
-	// Simulate an LLM agent suggestion
+	// Simulate an LLM agent suggestion with line-specific changes
 	suggestion := agent.Suggestion{
 		FilePath:    filePath,
-		NewContent:  "This is the updated content of the sample file, modified by the LLM agent.",
+		LineChanges: `{"2": "This is the updated content of the sample file, modified by the LLM agent."}`,
 	}
 
 	// Apply the suggestion

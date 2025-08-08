@@ -6,6 +6,13 @@ import (
 	"testing"
 )
 
+func TestReadFile_NonExistent(t *testing.T) {
+	_, err := ReadFile("non-existent-file")
+	if err == nil {
+		t.Error("ReadFile with non-existent file should have returned an error")
+	}
+}
+
 func TestReadFile(t *testing.T) {
 	// Create a temporary file with some content
 	content := []byte("hello world")
@@ -34,6 +41,13 @@ func TestReadFile(t *testing.T) {
 	}
 }
 
+func TestWriteFile_DirNonExistent(t *testing.T) {
+	err := WriteFile("non-existent-dir/file", []byte("hello"))
+	if err == nil {
+		t.Error("WriteFile to a non-existent directory should have returned an error")
+	}
+}
+
 func TestWriteFile(t *testing.T) {
 	// Create a temporary file path
 	tmpfile, err := ioutil.TempFile("", "test")
@@ -59,6 +73,13 @@ func TestWriteFile(t *testing.T) {
 
 	if string(readContent) != string(content) {
 		t.Errorf("WriteFile content mismatch: got %q, want %q", readContent, content)
+	}
+}
+
+func TestDeleteFile_NonExistent(t *testing.T) {
+	err := DeleteFile("non-existent-file")
+	if err == nil {
+		t.Error("DeleteFile with non-existent file should have returned an error")
 	}
 }
 

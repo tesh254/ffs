@@ -24,7 +24,7 @@ func TestApplySuggestion(t *testing.T) {
 	newContent := "This is the new and improved content."
 	suggestion := Suggestion{
 		FilePath:    tmpfile.Name(),
-		NewContent:  newContent,
+		LineChanges: `{"1": "This is the new and improved content."}`,
 	}
 
 	// Apply the suggestion
