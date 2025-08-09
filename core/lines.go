@@ -89,9 +89,9 @@ func printDiff(original, new string) {
 		text := diff.Text
 		switch diff.Type {
 		case diffmatchpatch.DiffInsert:
-			fmt.Printf("\x1b[32m%s\x1b[0m", text) // Green
+			fmt.Printf("\x1b[32m+ %s\x1b[0m", text) // Green
 		case diffmatchpatch.DiffDelete:
-			fmt.Printf("\x1b[31m%s\x1b[0m", text) // Red
+			fmt.Printf("\x1b[31m- %s\x1b[0m", text) // Red
 		case diffmatchpatch.DiffEqual:
 			fmt.Print(text)
 		}

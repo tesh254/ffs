@@ -83,6 +83,58 @@ func TestApplyPatch_InvalidJSON(t *testing.T) {
 	}
 }
 
+func TestApplyAddingPatch_MultiLine(t *testing.T) {
+	testCases := []struct {
+		name     string
+		original string
+		patch    string
+		expected string
+	}{
+		{
+			name:     "insert at beginning",
+			original: "line3\nline4",
+			patch:    `{"1": "line1", "2": "line2"}`,
+			expected: "line1\nline2\nline3\nline4",
+		},
+		{
+			name:     "insert in middle",
+			original: "line1\nline4",
+			patch:    `{"2": "line2", "3": "line3"}`,
+			expected: "line1\nline2\nline3\nline4",
+		},
+		{
+			name:     "insert at end",
+			original: "line1\nline2",
+			patch:    `{"3": "line3", "4": "line4"}`,
+			expected: "line1\nline2\nline3\nline4",
+		},
+		{
+			name:     "insert with gaps",
+			original: "line1\nline4",
+			patch:    `{"2": "line2", "4": "line3"}`,
+			expected: "line1\nline2\nline4\nline3",
+		},
+		{
+			name:     "insert beyond end",
+			original: "line1",
+			patch:    `{"3": "line3"}`,
+			expected: "line1\n\nline3",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			newContent, err := applyPatch(tc.original, tc.patch, PatchTypeAdding)
+			if err != nil {
+				t.Fatalf("applyPatch failed: %v", err)
+			}
+			if newContent != tc.expected {
+				t.Errorf("applyPatch adding failed: got %q, want %q", newContent, tc.expected)
+			}
+		})
+	}
+}
+
 func TestPrintDiff(t *testing.T) {
 	original := "line1\nline2\nline3"
 	new := "line1\nnew line2\nline3"
@@ -102,10 +154,10 @@ func TestPrintDiff(t *testing.T) {
 	output := buf.String()
 
 	t.Logf("diff output: %q", output)
-	if !strings.Contains(output, "\x1b[31mline2\n\x1b[0m") {
+	if !strings.Contains(output, "\x1b[31m- line2\n\x1b[0m") {
 		t.Errorf("PrintDiff output mismatch: expected red color for removed line")
 	}
-	if !strings.Contains(output, "\x1b[32mnew line2\n\x1b[0m") {
+	if !strings.Contains(output, "\x1b[32m+ new line2\n\x1b[0m") {
 		t.Errorf("PrintDiff output mismatch: expected green color for added line")
 	}
 }

@@ -9,60 +9,79 @@ import (
 )
 
 func main() {
-	// Create a temporary file for the example
-	filePath := "example.txt"
-	originalContent := "This is a sample file for the ffs library.\nThis should be the second line for the ffs sample file"
-	if err := core.WriteFile(filePath, []byte(originalContent)); err != nil {
+	// --- Replacing Patch Example ---
+	fmt.Println("--- Replacing Patch Example ---")
+	replacingFilePath := "replacing_example.txt"
+	originalContentReplacing := "line1\nline2\nline3"
+	if err := core.WriteFile(replacingFilePath, []byte(originalContentReplacing)); err != nil {
 		log.Fatalf("Failed to create initial file: %v", err)
 	}
-	defer core.DeleteFile(filePath)
+	defer core.DeleteFile(replacingFilePath)
 
 	fmt.Println("Original file content:")
-	fmt.Println(originalContent)
+	fmt.Println(originalContentReplacing)
 	fmt.Println("--------------------")
 
-	// Simulate an LLM agent suggestion with line-specific changes
-	suggestion := agent.Suggestion{
-		FilePath:    filePath,
-		LineChanges: `{"2": "This is the updated content of the sample file, modified by the LLM agent."}`,
+	suggestionReplacing := agent.Suggestion{
+		FilePath:    replacingFilePath,
+		LineChanges: `{"2": "this is a replaced line"}`,
+		PatchType:   core.PatchTypeReplacing,
 	}
 
-	// Apply the suggestion
-	newContent, err := agent.ApplySuggestion(suggestion)
+	newContentReplacing, err := agent.ApplySuggestion(suggestionReplacing)
 	if err != nil {
 		log.Fatalf("Failed to apply suggestion: %v", err)
 	}
 
 	fmt.Println("New file content after applying suggestion:")
-	fmt.Println(newContent)
+	fmt.Println(newContentReplacing)
 	fmt.Println("--------------------")
 
-	// Verify the file content on disk
-	finalContent, err := core.ReadFile(filePath)
+	fmt.Println("Diff:")
+	core.PrintDiff(originalContentReplacing, newContentReplacing)
+	fmt.Println("--------------------")
+
+	// --- Adding Patch Example ---
+	fmt.Println("--- Adding Patch Example ---")
+	addingFilePath := "adding_example.txt"
+	originalContentAdding := "line1\nline3"
+	if err := core.WriteFile(addingFilePath, []byte(originalContentAdding)); err != nil {
+		log.Fatalf("Failed to create initial file: %v", err)
+	}
+	defer core.DeleteFile(addingFilePath)
+
+	fmt.Println("Original file content:")
+	fmt.Println(originalContentAdding)
+	fmt.Println("--------------------")
+
+	suggestionAdding := agent.Suggestion{
+		FilePath:    addingFilePath,
+		LineChanges: `{"2": "this is an added line"}`,
+		PatchType:   core.PatchTypeAdding,
+	}
+
+	newContentAdding, err := agent.ApplySuggestion(suggestionAdding)
 	if err != nil {
-		log.Fatalf("Failed to read final file content: %v", err)
+		log.Fatalf("Failed to apply suggestion: %v", err)
 	}
 
-	fmt.Println("Final content read from disk:")
-	fmt.Println(string(finalContent))
+	fmt.Println("New file content after applying suggestion:")
+	fmt.Println(newContentAdding)
 	fmt.Println("--------------------")
 
-	if string(finalContent) == newContent {
-		fmt.Println("Successfully applied suggestion to the file.")
-	} else {
-		fmt.Println("Failed to apply suggestion to the file.")
-	}
+	fmt.Println("Diff:")
+	core.PrintDiff(originalContentAdding, newContentAdding)
 	fmt.Println("--------------------")
 
-	// Tree example
-	fmt.Println("Directory Example")
+	// --- Tree Example ---
+	fmt.Println("--- Directory Example ---")
 	tree, err := core.WorkingDirectoryTree(nil, []string{".git", "node_modules", ".DS_Store"})
 	if err != nil {
 		log.Fatalf("Failed to get working directory tree: %v", err)
 	}
-	fmt.Println("Text Print Example")
+	fmt.Println("Text Print Example:")
 	core.PrintDirectoryTree(tree, false)
 	fmt.Println("--------------------")
-	fmt.Println("JSON Print Example")
+	fmt.Println("JSON Print Example:")
 	core.PrintDirectoryTree(tree, true)
 }
