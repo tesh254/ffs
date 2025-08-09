@@ -1,5 +1,10 @@
 package core
 
+import (
+	"encoding/json"
+	"fmt"
+)
+
 // ReadFile reads the content of a file at the given path.
 func ReadFile(path string) ([]byte, error) {
 	return readFile(path)
@@ -29,4 +34,24 @@ func DeleteDir(path string) error {
 // then returns the updated content.
 func ApplyPatch(originalContent string, patchJSON string) (string, error) {
 	return applyPatch(originalContent, patchJSON)
+}
+
+// WorkingDirectoryTree returns a tree of the current working directory
+func WorkingDirectoryTree(include, exclude []string) (DirectoryTree, error) {
+	tree, err := workingDirectoryTree(include, exclude)
+	return tree, err
+}
+
+// PrintDirectoryTree prints the directory tree in a human-readable format.
+func PrintDirectoryTree(tree DirectoryTree, inJson bool) {
+	if !inJson {
+		printTree(tree)
+	} else {
+		jsonBytes, err := json.MarshalIndent(tree, "", "  ")
+		if err != nil {
+			fmt.Printf("could not marshal directory tree to JSON: %v", err)
+			return
+		}
+		fmt.Println(string(jsonBytes))
+	}
 }

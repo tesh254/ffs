@@ -52,4 +52,17 @@ func main() {
 	} else {
 		fmt.Println("Failed to apply suggestion to the file.")
 	}
+	fmt.Println("--------------------")
+
+	// Tree example
+	fmt.Println("Directory Example")
+	tree, err := core.WorkingDirectoryTree(nil, []string{".git", "node_modules", ".DS_Store"})
+	if err != nil {
+		log.Fatalf("Failed to get working directory tree: %v", err)
+	}
+	fmt.Println("Text Print Example")
+	core.PrintDirectoryTree(tree, false)
+	fmt.Println("--------------------")
+	fmt.Println("JSON Print Example")
+	core.PrintDirectoryTree(tree, true)
 }
