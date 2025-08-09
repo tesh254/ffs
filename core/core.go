@@ -1,10 +1,5 @@
 package core
 
-import (
-	"encoding/json"
-	"fmt"
-)
-
 // ReadFile reads the content of a file at the given path.
 func ReadFile(path string) ([]byte, error) {
 	return readFile(path)
@@ -47,11 +42,11 @@ func PrintDirectoryTree(tree DirectoryTree, inJson bool) {
 	if !inJson {
 		printTree(tree)
 	} else {
-		jsonBytes, err := json.MarshalIndent(tree, "", "  ")
-		if err != nil {
-			fmt.Printf("could not marshal directory tree to JSON: %v", err)
-			return
-		}
-		fmt.Println(string(jsonBytes))
+		printTreeInJSON(tree)
 	}
+}
+
+// GetTreeMinifiedJSON returns the directory tree as a minified JSON string.
+func GetTreeMinifiedJSON(tree DirectoryTree) (string, error) {
+	return getTreeMinifiedJSON(tree)
 }

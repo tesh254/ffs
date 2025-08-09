@@ -1,6 +1,7 @@
 package core
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -137,4 +138,21 @@ func printTree(tree DirectoryTree) {
 		}
 	}
 	printRecursive(tree.Children, "")
+}
+
+func getTreeMinifiedJSON(tree DirectoryTree) (string, error) {
+	jsonBytes, err := json.Marshal(tree)
+	if err != nil {
+		return "", fmt.Errorf("could not marshal directory tree to JSON: %w", err)
+	}
+	return string(jsonBytes), nil
+}
+
+func printTreeInJSON(tree DirectoryTree) {
+	jsonBytes, err := json.MarshalIndent(tree, "", "  ")
+	if err != nil {
+		fmt.Printf("could not marshal directory tree to JSON: %v", err)
+		return
+	}
+	fmt.Println(string(jsonBytes))
 }
