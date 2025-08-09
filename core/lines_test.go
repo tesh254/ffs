@@ -12,7 +12,7 @@ func TestToLineMap(t *testing.T) {
 		"2": "line 2",
 		"3": "line 3",
 	}
-	result := ToLineMap(content)
+	result := toLineMap(content)
 	if !reflect.DeepEqual(result, expected) {
 		t.Errorf("ToLineMap() = %v, want %v", result, expected)
 	}
@@ -25,7 +25,7 @@ func TestFromLineMap(t *testing.T) {
 		"2": "line 2",
 	}
 	expected := "line 1\nline 2\nline 3"
-	result := FromLineMap(lineMap)
+	result := fromLineMap(lineMap)
 	if result != expected {
 		t.Errorf("FromLineMap() = %q, want %q", result, expected)
 	}
@@ -38,7 +38,7 @@ func TestFromLineMap_InvalidKey(t *testing.T) {
 		"2":   "line 2",
 	}
 	expected := "line 1\nline 2"
-	result := FromLineMap(lineMap)
+	result := fromLineMap(lineMap)
 	if result != expected {
 		t.Errorf("FromLineMap() with invalid key = %q, want %q", result, expected)
 	}

@@ -7,9 +7,9 @@ import (
 	"strings"
 )
 
-// ToLineMap converts the content of a file into a map where keys are line numbers
+// toLineMap converts the content of a file into a map where keys are line numbers
 // (as strings) and values are the content of each line.
-func ToLineMap(content string) map[string]string {
+func toLineMap(content string) map[string]string {
 	lines := strings.Split(content, "\n")
 	lineMap := make(map[string]string, len(lines))
 	for i, line := range lines {
@@ -18,9 +18,9 @@ func ToLineMap(content string) map[string]string {
 	return lineMap
 }
 
-// FromLineMap converts a map of lines back into a single string.
+// fromLineMap converts a map of lines back into a single string.
 // The lines are sorted by line number before being joined together.
-func FromLineMap(lineMap map[string]string) string {
+func fromLineMap(lineMap map[string]string) string {
 	lines := make([]struct {
 		num int
 		str string
@@ -51,18 +51,18 @@ func FromLineMap(lineMap map[string]string) string {
 	return builder.String()
 }
 
-// ApplyPatch takes the original content and a JSON string representing the patch,
+// applyPatch takes the original content and a JSON string representing the patch,
 // then returns the updated content.
-func ApplyPatch(originalContent string, patchJSON string) (string, error) {
+func applyPatch(originalContent string, patchJSON string) (string, error) {
 	var patch map[string]string
 	if err := json.Unmarshal([]byte(patchJSON), &patch); err != nil {
 		return "", err
 	}
 
-	lineMap := ToLineMap(originalContent)
+	lineMap := toLineMap(originalContent)
 	for k, v := range patch {
 		lineMap[k] = v
 	}
 
-	return FromLineMap(lineMap), nil
+	return fromLineMap(lineMap), nil
 }
