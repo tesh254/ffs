@@ -1,7 +1,6 @@
 package agent
 
 import (
-	"io/ioutil"
 	"os"
 	"testing"
 
@@ -11,7 +10,7 @@ import (
 func TestApplySuggestion(t *testing.T) {
 	// Create a temporary file with some content
 	originalContent := "This is the original content."
-	tmpfile, err := ioutil.TempFile("", "test")
+	tmpfile, err := os.CreateTemp("", "test")
 	if err != nil {
 		t.Fatal(err)
 	}

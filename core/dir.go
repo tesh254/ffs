@@ -11,6 +11,7 @@ type DirectoryTree struct {
 	Path     string          `json:"path"`
 	Name     string          `json:"name"`
 	IsFile   bool            `json:"is_file"`
+	IsBinary bool            `json:"is_binary,omitempty"`
 	Children []DirectoryTree `json:"children,omitempty"`
 	Size     int64           `json:"size"`
 }
@@ -57,10 +58,11 @@ func buildDirectoryTree(path string, include, exclude []string) (DirectoryTree, 
 		}
 		// Included file.
 		return DirectoryTree{
-				Path:   path,
-				Name:   info.Name(),
-				IsFile: true,
-				Size:   info.Size(),
+				Path:     path,
+				Name:     info.Name(),
+				IsFile:   true,
+				IsBinary: isBinary(path),
+				Size:     info.Size(),
 			},
 			nil
 	}

@@ -1,7 +1,6 @@
 package core
 
 import (
-	"io/ioutil"
 	"os"
 	"testing"
 )
@@ -16,16 +15,16 @@ func TestReadFile_NonExistent(t *testing.T) {
 func TestReadFile(t *testing.T) {
 	// Create a temporary file with some content
 	content := []byte("hello world")
-	tmpfile, err := ioutil.TempFile("", "test")
+	tmpfile, err := os.CreateTemp("", "test")
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer os.Remove(tmpfile.Name()) // clean up
 
-	if _, err := tmpfile.Write(content); err != nil {
-		t.Fatal(err)
+	if _, tmpFileError := tmpfile.Write(content); tmpFileError != nil {
+		t.Fatal(tmpFileError)
 	}
-	if err := tmpfile.Close(); err != nil {
+	if err = tmpfile.Close(); err != nil {
 		t.Fatal(err)
 	}
 
@@ -50,7 +49,7 @@ func TestWriteFile_DirNonExistent(t *testing.T) {
 
 func TestWriteFile(t *testing.T) {
 	// Create a temporary file path
-	tmpfile, err := ioutil.TempFile("", "test")
+	tmpfile, err := os.CreateTemp("", "test")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -60,13 +59,13 @@ func TestWriteFile(t *testing.T) {
 
 	// Write to the file using the function
 	content := []byte("hello again")
-	if err := WriteFile(path, content); err != nil {
+	if err = WriteFile(path, content); err != nil {
 		t.Fatalf("WriteFile failed: %v", err)
 	}
 	defer os.Remove(path) // clean up
 
 	// Read the file to check if the content is correct
-	readContent, err := ioutil.ReadFile(path)
+	readContent, err := os.ReadFile(path)
 	if err != nil {
 		t.Fatalf("Failed to read back file: %v", err)
 	}
@@ -85,7 +84,7 @@ func TestDeleteFile_NonExistent(t *testing.T) {
 
 func TestDeleteFile(t *testing.T) {
 	// Create a temporary file
-	tmpfile, err := ioutil.TempFile("", "test")
+	tmpfile, err := os.CreateTemp("", "test")
 	if err != nil {
 		t.Fatal(err)
 	}
