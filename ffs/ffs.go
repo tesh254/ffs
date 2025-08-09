@@ -65,3 +65,8 @@ func (d *dir) Delete() error {
 func (d *dir) Path() string {
 	return d.path
 }
+
+// Tree returns the directories tree.
+func (d *dir) Tree(include, exclude []string) (core.DirectoryTree, error) {
+	return core.BuildDirTree(d.path, include, exclude)
+}

@@ -1,5 +1,7 @@
 package ffs
 
+import "github.com/tesh254/ffs/core"
+
 // FileSystem provides an interface for file and directory operations.
 // It abstracts the underlying file system, allowing for easier testing and extension.
 type FileSystem interface {
@@ -20,4 +22,5 @@ type Dir interface {
 	Create() error
 	Delete() error
 	Path() string
+	Tree(include, exclude []string) (core.DirectoryTree, error)
 }

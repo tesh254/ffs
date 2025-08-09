@@ -80,6 +80,131 @@ if err != nil {
 }
 ```
 
+## Low-Level API: The `core` Package
+
+The `core` package provides a set of low-level functions for interacting with the filesystem. These functions are used by the high-level `ffs` package, but they can also be used directly when you need more control.
+
+### Reading a File
+
+```go
+import "github.com/tesh254/ffs/core"
+
+content, err := core.ReadFile("path/to/your/file.txt")
+if err != nil {
+    // Handle error
+}
+fmt.Println(string(content))
+```
+
+
+### Deleting a File
+
+```go
+import "github.com/tesh254/ffs/core"
+
+err := core.DeleteFile("path/to/your/file.txt")
+if err != nil {
+    // Handle error
+}
+```
+
+### Creating a Directory
+
+```go
+import "github.com/tesh254/ffs/core"
+
+err := core.CreateDir("path/to/your/directory")
+if err != nil {
+    // Handle error
+}
+```
+
+### Deleting a Directory
+
+```go
+import "github.com/tesh254/ffs/core"
+
+err := core.DeleteDir("path/to/your/directory")
+if err != nil {
+    // Handle error
+}
+```
+
+### Applying a Patch
+
+The `ApplyPatch` function allows you to apply a set of line-based changes to a string. The patch is provided as a JSON string that maps line numbers to their new content.
+
+```go
+import "github.com/tesh254/ffs/core"
+
+originalContent := "line 1\nline 2\nline 3"
+patchJSON := `{"2": "new line 2"}`
+newContent, err := core.ApplyPatch(originalContent, patchJSON)
+if err != nil {
+    // Handle error
+}
+fmt.Println(newContent)
+// Output:
+// line 1
+// new line 2
+// line 3
+```
+
+### Working with Directory Trees
+
+The `core` package provides functions for generating and displaying directory trees.
+
+**Generating a Directory Tree:**
+
+The `WorkingDirectoryTree` function returns a `DirectoryTree` struct that represents the directory structure of the current working directory. You can provide optional `include` and `exclude` patterns to filter the results.
+
+```go
+import "github.com/tesh254/ffs/core"
+
+// Get the full directory tree
+tree, err := core.WorkingDirectoryTree(nil, nil)
+if err != nil {
+    // Handle error
+}
+
+// Get the directory tree including only .go files
+goFilesTree, err := core.WorkingDirectoryTree([]string{"*.go"}, nil)
+if err != nil {
+    // Handle error
+}
+```
+
+**Printing a Directory Tree:**
+
+The `PrintDirectoryTree` function prints a `DirectoryTree` in a human-readable format. You can also print the tree in JSON format.
+
+```go
+import "github.com/tesh254/ffs/core"
+
+tree, _ := core.WorkingDirectoryTree(nil, nil)
+
+// Print in human-readable format
+core.PrintDirectoryTree(tree, false)
+
+// Print in JSON format
+core.PrintDirectoryTree(tree, true)
+```
+
+**Getting a Minified JSON Representation:**
+
+The `GetTreeMinifiedJSON` function returns a minified JSON string representation of a `DirectoryTree`.
+
+```go
+import "github.com/tesh254/ffs/core"
+
+tree, _ := core.WorkingDirectoryTree(nil, nil)
+jsonString, err := core.GetTreeMinifiedJSON(tree)
+if err != nil {
+    // Handle error
+}
+fmt.Println(jsonString)
+```
+
 **Deleting a File:**
 
 ```go

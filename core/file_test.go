@@ -73,6 +73,12 @@ func TestWriteFile(t *testing.T) {
 	if string(readContent) != string(content) {
 		t.Errorf("WriteFile content mismatch: got %q, want %q", readContent, content)
 	}
+
+	// Test error case
+	err = WriteFile("/non-existent-dir/file", []byte("hello"))
+	if err == nil {
+		t.Error("WriteFile to a non-existent directory should have returned an error")
+	}
 }
 
 func TestDeleteFile_NonExistent(t *testing.T) {
@@ -100,4 +106,62 @@ func TestDeleteFile(t *testing.T) {
 	if _, err := os.Stat(path); !os.IsNotExist(err) {
 		t.Errorf("DeleteFile failed: file %q still exists", path)
 	}
+}
+
+func TestIsBinary(t *testing.T) {
+	// Create a temporary text file
+	textFile, err := os.CreateTemp("", "testText")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.Remove(textFile.Name())
+	if _, err = textFile.WriteString("this is a text file"); err != nil {
+		t.Fatal(err)
+	}
+	textFile.Close()
+
+	if isBinary(textFile.Name()) {
+		t.Errorf("isBinary failed: expected %s to be a text file", textFile.Name())
+	}
+
+	// Create a temporary binary file
+	binaryFile, err := os.CreateTemp("", "testBinary")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.Remove(binaryFile.Name())
+	if _, err = binaryFile.Write([]byte{0, 1, 2, 3}); err != nil {
+		t.Fatal(err)
+	}
+	binaryFile.Close()
+
+	if !isBinary(binaryFile.Name()) {
+		t.Errorf("isBinary failed: expected %s to be a binary file", binaryFile.Name())
+	}
+
+	// Test non-existent file
+	if isBinary("non-existent-file") {
+		t.Error("isBinary with non-existent file should have returned false")
+	}
+
+	// Test read error
+	file, err := os.CreateTemp("", "test")
+	if err != nil {
+		t.Fatal(err)
+	}
+	name := file.Name()
+	file.Close()
+	// Re-opening the file and closing it will not cause a read error.
+	// Instead, we make the file unreadable.
+	if err := os.Chmod(name, 0200); err != nil {
+		t.Fatal(err)
+	}
+	if isBinary(name) {
+		t.Error("isBinary with read error should have returned false")
+	}
+	// Cleanup
+	if err := os.Chmod(name, 0600); err != nil {
+		t.Fatal(err)
+	}
+	os.Remove(name)
 }

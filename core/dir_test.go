@@ -144,4 +144,49 @@ func TestBuildDirectoryTree(t *testing.T) {
 	if !binaryFile.IsBinary {
 		t.Errorf("Expected binary_file.bin to be binary")
 	}
+
+	// Test stat error
+	_, err = buildDirectoryTree("non-existent-dir", nil, nil)
+	if err == nil {
+		t.Error("buildDirectoryTree with non-existent directory should have returned an error")
+	}
+
+	// Test include filter
+	tree, err = buildDirectoryTree(tmpDir, []string{"*.txt"}, nil)
+	if err != nil {
+		t.Fatalf("buildDirectoryTree with include filter failed: %v", err)
+	}
+	if len(tree.Children) != 2 {
+		t.Errorf("Expected 2 children with include filter, got %d", len(tree.Children))
+	}
+
+	// Test exclude filter
+	tree, err = buildDirectoryTree(tmpDir, nil, []string{"*.bin"})
+	if err != nil {
+		t.Fatalf("buildDirectoryTree with exclude filter failed: %v", err)
+	}
+	if len(tree.Children) != 3 {
+		t.Errorf("Expected 3 children with exclude filter, got %d", len(tree.Children))
+	}
+
+	// Test unreadable directory
+	unreadableDir := tmpDir + "/unreadable"
+	if err = os.Mkdir(unreadableDir, 0755); err != nil {
+		t.Fatalf("Failed to create unreadable dir: %v", err)
+	}
+	if err = os.Chmod(unreadableDir, 0000); err != nil {
+		t.Fatalf("Failed to chmod unreadable dir: %v", err)
+	}
+	tree, err = buildDirectoryTree(tmpDir, nil, nil)
+	if err != nil {
+		t.Fatalf("buildDirectoryTree with unreadable dir failed: %v", err)
+	}
+	// The unreadable dir should be excluded
+	if len(tree.Children) != 4 {
+		t.Errorf("Expected 4 children with unreadable dir, got %d", len(tree.Children))
+	}
+	// Change perms back so cleanup can happen
+	if err = os.Chmod(unreadableDir, 0755); err != nil {
+		t.Fatalf("Failed to chmod unreadable dir: %v", err)
+	}
 }

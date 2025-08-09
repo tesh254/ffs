@@ -50,3 +50,9 @@ func PrintDirectoryTree(tree DirectoryTree, inJson bool) {
 func GetTreeMinifiedJSON(tree DirectoryTree) (string, error) {
 	return getTreeMinifiedJSON(tree)
 }
+
+// BuildDirTree builds a tree based on path provided
+func BuildDirTree(path string, include, exclude []string) (DirectoryTree, error) {
+	tree, err := buildDirectoryTree(path, include, exclude)
+	return tree, err
+}
