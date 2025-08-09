@@ -1,10 +1,11 @@
 package main
 
 import (
-	"ffs/agent"
-	"ffs/core"
 	"fmt"
 	"log"
+
+	"github.com/tesh254/ffs/agent"
+	"github.com/tesh254/ffs/core"
 )
 
 func main() {

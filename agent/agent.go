@@ -1,7 +1,7 @@
 package agent
 
 import (
-	"ffs/core"
+	"github.com/tesh254/ffs/core"
 )
 
 // Suggestion represents a proposed change to a file, typically from an LLM agent.

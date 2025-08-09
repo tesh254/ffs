@@ -1,10 +1,11 @@
 package agent
 
 import (
-	"ffs/core"
 	"io/ioutil"
 	"os"
 	"testing"
+
+	"github.com/tesh254/ffs/core"
 )
 
 func TestApplySuggestion(t *testing.T) {
