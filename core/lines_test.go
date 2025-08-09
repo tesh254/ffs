@@ -1,7 +1,11 @@
 package core
 
 import (
+	"bytes"
+	"io"
+	"os"
 	"reflect"
+	"strings"
 	"testing"
 )
 
@@ -45,23 +49,63 @@ func TestFromLineMap_InvalidKey(t *testing.T) {
 }
 
 func TestApplyPatch(t *testing.T) {
-	originalContent := "line 1\nline 2\nline 3"
-	patchJSON := `{"2": "new line 2"}`
-	expected := "line 1\nnew line 2\nline 3"
-	result, err := ApplyPatch(originalContent, patchJSON)
+	// Test replacing patch
+	originalContent := "line1\nline2\nline3"
+	patchJSON := `{"2": "new line2"}`
+	expectedContent := "line1\nnew line2\nline3"
+	newContent, err := applyPatch(originalContent, patchJSON, PatchTypeReplacing)
 	if err != nil {
-		t.Fatalf("ApplyPatch() error = %v", err)
+		t.Fatalf("applyPatch failed: %v", err)
 	}
-	if result != expected {
-		t.Errorf("ApplyPatch() = %q, want %q", result, expected)
+	if newContent != expectedContent {
+		t.Errorf("applyPatch replacing failed: got %q, want %q", newContent, expectedContent)
+	}
+
+	// Test adding patch
+	originalContent = "line1\nline3"
+	patchJSON = `{"2": "line2"}`
+	expectedContent = "line1\nline2\nline3"
+	newContent, err = applyPatch(originalContent, patchJSON, PatchTypeAdding)
+	if err != nil {
+		t.Fatalf("applyPatch failed: %v", err)
+	}
+	if newContent != expectedContent {
+		t.Errorf("applyPatch adding failed: got %q, want %q", newContent, expectedContent)
 	}
 }
 
 func TestApplyPatch_InvalidJSON(t *testing.T) {
 	originalContent := "line 1\nline 2\nline 3"
 	patchJSON := `{"2": "new line 2"`
-	_, err := ApplyPatch(originalContent, patchJSON)
+	_, err := applyPatch(originalContent, patchJSON, PatchTypeReplacing)
 	if err == nil {
 		t.Error("ApplyPatch() with invalid JSON should have returned an error")
+	}
+}
+
+func TestPrintDiff(t *testing.T) {
+	original := "line1\nline2\nline3"
+	new := "line1\nnew line2\nline3"
+
+	// Capture stdout
+	old := os.Stdout
+	r, w, _ := os.Pipe()
+	os.Stdout = w
+
+	printDiff(original, new)
+
+	w.Close()
+	os.Stdout = old
+
+	var buf bytes.Buffer
+	io.Copy(&buf, r)
+	output := buf.String()
+
+	t.Logf("diff output: %q", output)
+	if !strings.Contains(output, "\x1b[31mline2\n\x1b[0m") {
+		t.Errorf("PrintDiff output mismatch: expected red color for removed line")
+	}
+	if !strings.Contains(output, "\x1b[32mnew line2\n\x1b[0m") {
+		t.Errorf("PrintDiff output mismatch: expected green color for added line")
 	}
 }

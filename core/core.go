@@ -40,10 +40,20 @@ func DeleteDir(path string) error {
 	return deleteDir(path)
 }
 
+// PatchType defines the type of patch operation.
+type PatchType string
+
+const (
+	// PatchTypeReplacing indicates that the patch will replace existing lines.
+	PatchTypeReplacing PatchType = "replacing"
+	// PatchTypeAdding indicates that the patch will add new lines.
+	PatchTypeAdding PatchType = "adding"
+)
+
 // ApplyPatch takes the original content and a JSON string representing the patch,
 // then returns the updated content.
-func ApplyPatch(originalContent string, patchJSON string) (string, error) {
-	return applyPatch(originalContent, patchJSON)
+func ApplyPatch(originalContent string, patchJSON string, patchType PatchType) (string, error) {
+	return applyPatch(originalContent, patchJSON, patchType)
 }
 
 // WorkingDirectoryTree returns a tree of the current working directory
@@ -70,4 +80,9 @@ func GetTreeMinifiedJSON(tree DirectoryTree) (string, error) {
 func BuildDirTree(path string, include, exclude []string) (DirectoryTree, error) {
 	tree, err := buildDirectoryTree(path, include, exclude)
 	return tree, err
+}
+
+// PrintDiff prints a colored diff of the changes between two strings.
+func PrintDiff(original, new string) {
+	printDiff(original, new)
 }

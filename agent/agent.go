@@ -7,8 +7,9 @@ import (
 // Suggestion represents a proposed change to a file, typically from an LLM agent.
 // It targets specific lines to be updated rather than replacing the entire file content.
 type Suggestion struct {
-	FilePath    string // The path to the file to be modified.
-	LineChanges string // A JSON string representing a map of line numbers to their new content.
+	FilePath    string         // The path to the file to be modified.
+	LineChanges string         // A JSON string representing a map of line numbers to their new content.
+	PatchType   core.PatchType // The type of patch to apply.
 }
 
 // ApplySuggestion takes a suggestion with line-specific changes and applies them to the file.
@@ -22,7 +23,7 @@ func ApplySuggestion(suggestion Suggestion) (string, error) {
 	}
 
 	// Apply the patch to the original content
-	newContent, err := core.ApplyPatch(string(originalContent), suggestion.LineChanges)
+	newContent, err := core.ApplyPatch(string(originalContent), suggestion.LineChanges, suggestion.PatchType)
 	if err != nil {
 		return "", err
 	}
