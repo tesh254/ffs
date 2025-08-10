@@ -5,21 +5,6 @@ func ReadFile(path string) ([]byte, error) {
 	return readFile(path)
 }
 
-// GetFileLineMap reads and parses a file to line map.
-// The line number being the key and the contents being the value.
-func FileToLineMap(path string) (map[string]string, error) {
-	content, err := readFile(path)
-	if err != nil {
-		return nil, err
-	}
-	return toLineMap(string(content)), nil
-}
-
-// LineMapToFile converts a line map back to a file content.
-func LineMapToFile(lineMap map[string]string) string {
-	return fromLineMap(lineMap)
-}
-
 // WriteFile writes data to a file at the given path.
 func WriteFile(path string, data []byte) error {
 	return writeFile(path, data)
@@ -40,20 +25,8 @@ func DeleteDir(path string) error {
 	return deleteDir(path)
 }
 
-// PatchType defines the type of patch operation.
-type PatchType string
-
-const (
-	// PatchTypeReplacing indicates that the patch will replace existing lines.
-	PatchTypeReplacing PatchType = "replacing"
-	// PatchTypeAdding indicates that the patch will add new lines.
-	PatchTypeAdding PatchType = "adding"
-)
-
-// ApplyPatch takes the original content and a JSON string representing the patch,
-// then returns the updated content.
-func ApplyPatch(originalContent string, patchJSON string, patchType PatchType) (string, error) {
-	return applyPatch(originalContent, patchJSON, patchType)
+func ApplyPatch(request FileEditRequest, verbose, prompt, highlight bool) error {
+	return applyEditsWithDynamicOffset(request, verbose, prompt, highlight)
 }
 
 // WorkingDirectoryTree returns a tree of the current working directory
@@ -80,9 +53,4 @@ func GetTreeMinifiedJSON(tree DirectoryTree) (string, error) {
 func BuildDirTree(path string, include, exclude []string) (DirectoryTree, error) {
 	tree, err := buildDirectoryTree(path, include, exclude)
 	return tree, err
-}
-
-// PrintDiff prints a colored diff of the changes between two strings.
-func PrintDiff(original, new string) {
-	printDiff(original, new)
 }
