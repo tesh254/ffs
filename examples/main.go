@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/tesh254/ffs/agent"
 	"github.com/tesh254/ffs/core"
 )
 
@@ -22,30 +21,35 @@ func main() {
 	fmt.Println(originalContentReplacing)
 	fmt.Println("--------------------")
 
-	suggestionReplacing := agent.Suggestion{
-		FilePath:    replacingFilePath,
-		LineChanges: `{"2": "this is a replaced line"}`,
-		PatchType:   core.PatchTypeReplacing,
+	editRequestReplacing := core.FileEditRequest{
+		FilePath: replacingFilePath,
+		Edits: []core.EditInstruction{
+			{
+				Action:     "replace",
+				LineNumber: 2,
+				NewContent: "this is a replaced line",
+			},
+		},
 	}
 
-	newContentReplacing, err := agent.ApplySuggestion(suggestionReplacing)
-	if err != nil {
+	if err := core.ApplyPatch(editRequestReplacing, true, true, true); err != nil {
 		log.Fatalf("Failed to apply suggestion: %v", err)
 	}
 
-	fmt.Println("New file content after applying suggestion:")
-	fmt.Println(newContentReplacing)
-	fmt.Println("--------------------")
+	newContentReplacing, err := core.ReadFile(replacingFilePath)
+	if err != nil {
+		log.Fatalf("Failed to read file after applying patch: %v", err)
+	}
 
-	fmt.Println("Diff:")
-	core.PrintDiff(originalContentReplacing, newContentReplacing)
+	fmt.Println("New file content after applying suggestion:")
+	fmt.Println(string(newContentReplacing))
 	fmt.Println("--------------------")
 
 	// --- Adding Patch Example ---
 	fmt.Println("--- Adding Patch Example ---")
 	addingFilePath := "adding_example.txt"
 	originalContentAdding := "line1\nline3"
-	if err := core.WriteFile(addingFilePath, []byte(originalContentAdding)); err != nil {
+	if err = core.WriteFile(addingFilePath, []byte(originalContentAdding)); err != nil {
 		log.Fatalf("Failed to create initial file: %v", err)
 	}
 	defer core.DeleteFile(addingFilePath)
@@ -54,23 +58,28 @@ func main() {
 	fmt.Println(originalContentAdding)
 	fmt.Println("--------------------")
 
-	suggestionAdding := agent.Suggestion{
-		FilePath:    addingFilePath,
-		LineChanges: `{"2": "this is an added line"}`,
-		PatchType:   core.PatchTypeAdding,
+	editRequestAdding := core.FileEditRequest{
+		FilePath: addingFilePath,
+		Edits: []core.EditInstruction{
+			{
+				Action:     "insert",
+				LineNumber: 2,
+				NewContent: "this is an added line",
+			},
+		},
 	}
 
-	newContentAdding, err := agent.ApplySuggestion(suggestionAdding)
-	if err != nil {
+	if err = core.ApplyPatch(editRequestAdding, true, true, true); err != nil {
 		log.Fatalf("Failed to apply suggestion: %v", err)
 	}
 
-	fmt.Println("New file content after applying suggestion:")
-	fmt.Println(newContentAdding)
-	fmt.Println("--------------------")
+	newContentAdding, err := core.ReadFile(addingFilePath)
+	if err != nil {
+		log.Fatalf("Failed to read file after applying patch: %v", err)
+	}
 
-	fmt.Println("Diff:")
-	core.PrintDiff(originalContentAdding, newContentAdding)
+	fmt.Println("New file content after applying suggestion:")
+	fmt.Println(string(newContentAdding))
 	fmt.Println("--------------------")
 
 	// --- Tree Example ---

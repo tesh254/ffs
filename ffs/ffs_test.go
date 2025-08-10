@@ -4,6 +4,8 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+
+	"github.com/tesh254/ffs/core"
 )
 
 func TestFFS(t *testing.T) {
@@ -73,5 +75,73 @@ func TestFFS(t *testing.T) {
 	// Test deleting the directory.
 	if err := d.Delete(); err != nil {
 		t.Fatalf("failed to delete directory: %v", err)
+	}
+}
+
+func TestApplyPatch(t *testing.T) {
+	// Create a temporary file with some content
+	tmpfile, err := os.CreateTemp("", "test.txt")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.Remove(tmpfile.Name())
+
+	content := "line1\nline2\nline3"
+	if _, err = tmpfile.Write([]byte(content)); err != nil {
+		t.Fatal(err)
+	}
+	tmpfile.Close()
+
+	// Test replacing a line
+	replaceRequest := core.FileEditRequest{
+		FilePath: tmpfile.Name(),
+		Edits: []core.EditInstruction{
+			{
+				Action:     "replace",
+				LineNumber: 2,
+				NewContent: "this is a replaced line",
+			},
+		},
+	}
+
+	err = core.ApplyPatch(replaceRequest, true, false, false)
+	if err != nil {
+		t.Errorf("ApplyPatch failed: %v", err)
+	}
+
+	// Read the file and check the content
+	newContent, err := os.ReadFile(tmpfile.Name())
+	if err != nil {
+		t.Fatal(err)
+	}
+	expectedAfterReplace := "line1\nthis is a replaced line\nline3"
+	if string(newContent) != expectedAfterReplace {
+		t.Errorf("ApplyPatch did not replace the line correctly. Got %q, expected %q", string(newContent), expectedAfterReplace)
+	}
+
+	// Test adding a line
+	addRequest := core.FileEditRequest{
+		FilePath: tmpfile.Name(),
+		Edits: []core.EditInstruction{
+			{
+				Action:     "insert",
+				LineNumber: 2,
+				NewContent: "this is an added line",
+			},
+		},
+	}
+	err = core.ApplyPatch(addRequest, true, false, false)
+	if err != nil {
+		t.Errorf("ApplyPatch failed: %v", err)
+	}
+
+	// Read the file and check the content
+	newContent, err = os.ReadFile(tmpfile.Name())
+	if err != nil {
+		t.Fatal(err)
+	}
+	expectedAfterAdd := "line1\nthis is an added line\nthis is a replaced line\nline3"
+	if string(newContent) != expectedAfterAdd {
+		t.Errorf("ApplyPatch did not add the line correctly. Got %q, expected %q", string(newContent), expectedAfterAdd)
 	}
 }
