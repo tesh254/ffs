@@ -21,6 +21,15 @@ type FileEditRequest struct {
 	Edits    []EditInstruction `json:"edits"`
 }
 
+// readFileLines reads a file and returns its content as a slice of strings.
+func readFileLines(filePath string) ([]string, error) {
+	content, err := os.ReadFile(filePath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read file %s: %v", filePath, err)
+	}
+	return strings.Split(string(content), "\n"), nil
+}
+
 // printDiff prints the diff between two sets of lines with line numbers
 func printDiff(topLines, original, updated, bottomLines []string, startLine int, highlight bool) {
 	// Define ANSI color codes
@@ -59,8 +68,8 @@ func printDiff(topLines, original, updated, bottomLines []string, startLine int,
 	for i, line := range updated {
 		// Use the edit line number as the base for inserts, incrementing for each added line
 		baseLine := startLine + len(topLines)
-		if len(original) == 0 { // Insert case
-			baseLine = startLine + len(topLines) // Align with insertion point
+		if len(original) == 0 {
+			baseLine = startLine + len(topLines)
 		}
 		fmt.Printf("%s%3d| %s%s%s+ %s%s\n", lightBlue, baseLine+i, addedPrefix, addedBg, white, line, reset)
 	}
@@ -70,13 +79,8 @@ func printDiff(topLines, original, updated, bottomLines []string, startLine int,
 	}
 }
 
-// splitFileIntoLines splits the file content into lines
-func splitFileIntoLines(content []byte) []string {
-	return strings.Split(string(content), "\n")
-}
-
-// getDiff returns the original and updated lines with context for diff display
-func getDiff(edit EditInstruction, lines []string) (topLines, original, updated, bottomLines []string) {
+// generateDiff returns the original and updated lines with context for diff display
+func generateDiff(edit EditInstruction, lines []string) (topLines, original, updated, bottomLines []string) {
 	if len(lines) == 1 {
 		return lines, nil, strings.Split(edit.NewContent, "\n"), nil
 	}
@@ -88,11 +92,11 @@ func getDiff(edit EditInstruction, lines []string) (topLines, original, updated,
 	topLines = lines[start-1 : edit.LineNumber-1]
 	if edit.Action == "replace" {
 		original = lines[edit.LineNumber-1 : edit.LineNumber]
-	} else { // insert
-		original = nil // For insert, no lines are removed
+	} else {
+		original = nil
 	}
 	updated = strings.Split(edit.NewContent, "\n")
-	bottomLines = lines[edit.LineNumber-1 : end] // Include the line at insertion point for context
+	bottomLines = lines[edit.LineNumber-1 : end]
 
 	return topLines, original, updated, bottomLines
 }
@@ -113,8 +117,8 @@ func max(a, b int) int {
 	return b
 }
 
-// validateLineNumbers validates the line numbers in the edit requests against the original file lines
-func validateLineNumbers(request FileEditRequest, lines []string) error {
+// validateEdits validates the line numbers in the edit requests against the original file lines
+func validateEdits(request FileEditRequest, lines []string) error {
 	for _, edit := range request.Edits {
 		if edit.LineNumber < 1 || edit.LineNumber > len(lines)+1 {
 			return fmt.Errorf("invalid line number %d for file %s (file has %d lines)", edit.LineNumber, request.FilePath, len(lines))
@@ -123,53 +127,32 @@ func validateLineNumbers(request FileEditRequest, lines []string) error {
 	return nil
 }
 
-// applyEditsWithDynamicOffset applies the specified edits to the file with dynamic line number adjustment
-func applyEditsWithDynamicOffset(request FileEditRequest, verbose, prompt, highlight bool) error {
-	// Read the file
-	content, err := os.ReadFile(request.FilePath)
-	if err != nil {
-		return fmt.Errorf("failed to read file %s: %v", request.FilePath, err)
-	}
-
-	lines := splitFileIntoLines(content)
-
-	if err = validateLineNumbers(request, lines); err != nil {
-		return err
-	}
-
-	// Sort edits by line number (ascending) to process from start to end
-	edits := make([]EditInstruction, len(request.Edits))
-	copy(edits, request.Edits)
-	sort.Slice(edits, func(i, j int) bool {
-		return edits[i].LineNumber < edits[j].LineNumber
+// sortEdits sorts a slice of EditInstruction by line number in ascending order.
+// It returns a new slice, leaving the original unchanged.
+func sortEdits(edits []EditInstruction) []EditInstruction {
+	sortedEdits := make([]EditInstruction, len(edits))
+	copy(sortedEdits, edits)
+	sort.Slice(sortedEdits, func(i, j int) bool {
+		return sortedEdits[i].LineNumber < sortedEdits[j].LineNumber
 	})
+	return sortedEdits
+}
 
+// promptUser asks for user confirmation and returns true if confirmed, false otherwise.
+func promptUser(message string) bool {
+	fmt.Print(message)
+	scanner := bufio.NewScanner(os.Stdin)
+	scanner.Scan()
+	response := strings.TrimSpace(strings.ToLower(scanner.Text()))
+	return response == "y" || response == "yes"
+}
+
+// applyEdits applies a slice of sorted edits to a slice of lines and returns the updated lines.
+func applyEdits(lines []string, edits []EditInstruction) ([]string, error) {
 	updatedLines := make([]string, 0, len(lines)+len(edits))
 	editIndex := 0
 	lineIndex := 0
 
-	// If verbose, print diffs for each edit
-	if verbose {
-		fmt.Printf("Proposed changes for %s:\n", request.FilePath)
-		for _, edit := range edits {
-			topLines, original, updated, bottomLines := getDiff(edit, lines)
-			fmt.Printf("\nEdit at line %d (%s):\n", edit.LineNumber, edit.Action)
-			printDiff(topLines, original, updated, bottomLines, max(1, edit.LineNumber-2), highlight)
-		}
-	}
-
-	// If prompt is true, ask for user confirmation
-	if prompt {
-		fmt.Print("\nApply these changes? (y/n): ")
-		scanner := bufio.NewScanner(os.Stdin)
-		scanner.Scan()
-		response := strings.TrimSpace(strings.ToLower(scanner.Text()))
-		if response != "y" && response != "yes" {
-			return fmt.Errorf("user aborted the file edit operation")
-		}
-	}
-
-	// Apply edits
 	for lineIndex < len(lines) {
 		currentLineNumber := lineIndex + 1
 
@@ -184,7 +167,7 @@ func applyEditsWithDynamicOffset(request FileEditRequest, verbose, prompt, highl
 			case "replace":
 				updatedLines = append(updatedLines, newLines...)
 			default:
-				return fmt.Errorf("invalid action %s for file %s", edit.Action, request.FilePath)
+				return nil, fmt.Errorf("invalid action %s", edit.Action)
 			}
 
 			editIndex++
@@ -204,12 +187,64 @@ func applyEditsWithDynamicOffset(request FileEditRequest, verbose, prompt, highl
 		}
 		editIndex++
 	}
+	return updatedLines, nil
+}
 
-	newContent := strings.Join(updatedLines, "\n")
-	if err := os.WriteFile(request.FilePath, []byte(newContent), 0644); err != nil {
-		return fmt.Errorf("failed to write file %s: %v", request.FilePath, err)
+// writeFileLines writes a slice of strings to a file, with each string as a new line.
+func writeFileLines(filePath string, lines []string) error {
+	newContent := strings.Join(lines, "\n")
+	if err := os.WriteFile(filePath, []byte(newContent), 0644); err != nil {
+		return fmt.Errorf("failed to write file %s: %v", filePath, err)
+	}
+	return nil
+}
+
+// editFileWorkflow orchestrates the file editing process.
+func editFileWorkflow(request FileEditRequest, verbose, prompt, highlight bool) error {
+	// Read file
+	lines, err := readFileLines(request.FilePath)
+	if err != nil {
+		return err
 	}
 
-	fmt.Printf("Successfully updated file %s\n", request.FilePath)
+	// Validate edits
+	if err = validateEdits(request, lines); err != nil {
+		return err
+	}
+
+	// Sort edits
+	edits := sortEdits(request.Edits)
+
+	// Show diffs
+	if verbose {
+		fmt.Printf("Proposed changes for %s:\n", request.FilePath)
+		for _, edit := range edits {
+			topLines, original, updated, bottomLines := generateDiff(edit, lines)
+			fmt.Printf("\nEdit at line %d (%s):\n", edit.LineNumber, edit.Action)
+			printDiff(topLines, original, updated, bottomLines, max(1, edit.LineNumber-2), highlight)
+		}
+	}
+
+	// Prompt user
+	if prompt {
+		if !promptUser("\nApply these changes? (y/n): ") {
+			return fmt.Errorf("user aborted the file edit operation")
+		}
+	}
+
+	// Apply edits
+	updatedLines, err := applyEdits(lines, edits)
+	if err != nil {
+		return fmt.Errorf("failed to apply edits to %s: %v", request.FilePath, err)
+	}
+
+	// Write file
+	if err := writeFileLines(request.FilePath, updatedLines); err != nil {
+		return err
+	}
+
+	if verbose {
+		fmt.Printf("Successfully updated file %s\n", request.FilePath)
+	}
 	return nil
 }

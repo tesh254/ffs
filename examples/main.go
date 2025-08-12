@@ -93,4 +93,24 @@ func main() {
 	fmt.Println("--------------------")
 	fmt.Println("JSON Print Example:")
 	core.PrintDirectoryTree(tree, true)
+	fmt.Println("--------------------")
+
+	// --- Search Example ---
+	fmt.Println("--- Search Example ---")
+	searchOptions := core.SearchOptions{
+		MatchCase:      false,
+		MatchWholeWord: true,
+		UseRegex:       false,
+	}
+	// Search for the word "file" in the current directory.
+	searchResults, err := core.SearchFiles(".", "file", searchOptions)
+	if err != nil {
+		log.Fatalf("SearchFiles failed: %v", err)
+	}
+
+	fmt.Printf("Found %d results for query 'file':\n", len(searchResults))
+	for _, result := range searchResults {
+		fmt.Printf("  - %s:%d: %s\n", result.FilePath, result.LineNumber, result.LineContent)
+	}
+	fmt.Println("--------------------")
 }

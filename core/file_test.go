@@ -120,8 +120,8 @@ func TestIsBinary(t *testing.T) {
 	}
 	textFile.Close()
 
-	if isBinary(textFile.Name()) {
-		t.Errorf("isBinary failed: expected %s to be a text file", textFile.Name())
+	if IsBinary(textFile.Name()) {
+		t.Errorf("IsBinary failed: expected %s to be a text file", textFile.Name())
 	}
 
 	// Create a temporary binary file
@@ -135,13 +135,13 @@ func TestIsBinary(t *testing.T) {
 	}
 	binaryFile.Close()
 
-	if !isBinary(binaryFile.Name()) {
-		t.Errorf("isBinary failed: expected %s to be a binary file", binaryFile.Name())
+	if !IsBinary(binaryFile.Name()) {
+		t.Errorf("IsBinary failed: expected %s to be a binary file", binaryFile.Name())
 	}
 
 	// Test non-existent file
-	if isBinary("non-existent-file") {
-		t.Error("isBinary with non-existent file should have returned false")
+	if IsBinary("non-existent-file") {
+		t.Error("IsBinary with non-existent file should have returned false")
 	}
 
 	// Test read error
@@ -156,8 +156,8 @@ func TestIsBinary(t *testing.T) {
 	if err := os.Chmod(name, 0200); err != nil {
 		t.Fatal(err)
 	}
-	if isBinary(name) {
-		t.Error("isBinary with read error should have returned false")
+	if IsBinary(name) {
+		t.Error("IsBinary with read error should have returned false")
 	}
 	// Cleanup
 	if err := os.Chmod(name, 0600); err != nil {

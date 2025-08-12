@@ -25,8 +25,14 @@ func DeleteDir(path string) error {
 	return deleteDir(path)
 }
 
+// ApplyPatch applies a patch to a file.
 func ApplyPatch(request FileEditRequest, verbose, prompt, highlight bool) error {
-	return applyEditsWithDynamicOffset(request, verbose, prompt, highlight)
+	return editFileWorkflow(request, verbose, prompt, highlight)
+}
+
+// SearchFiles performs a concurrent search for a query in a given path.
+func SearchFiles(rootPath, query string, options SearchOptions) ([]SearchResult, error) {
+	return search(rootPath, query, options)
 }
 
 // WorkingDirectoryTree returns a tree of the current working directory
@@ -53,4 +59,44 @@ func GetTreeMinifiedJSON(tree DirectoryTree) (string, error) {
 func BuildDirTree(path string, include, exclude []string) (DirectoryTree, error) {
 	tree, err := buildDirectoryTree(path, include, exclude)
 	return tree, err
+}
+
+// ReadFileLines reads the lines of a file at the given path.
+func ReadFileLines(path string) ([]string, error) {
+	return readFileLines(path)
+}
+
+// ValidateEdits validates the edits against the file content.
+func ValidateEdits(request FileEditRequest, lines []string) error {
+	return validateEdits(request, lines)
+}
+
+// SortEdits sorts the edits by line number.
+func SortEdits(edits []EditInstruction) []EditInstruction {
+	return sortEdits(edits)
+}
+
+// GenerateDiff generates the diff for the edit.
+func GenerateDiff(edit EditInstruction, lines []string) (topLines, original, updated, bottomLines []string) {
+	return generateDiff(edit, lines)
+}
+
+// PrintDiff prints the diff for the edit.
+func PrintDiff(topLines, original, updated, bottomLines []string, edit EditInstruction) {
+	printDiff(topLines, original, updated, bottomLines, max(1, edit.LineNumber), true)
+}
+
+// PromptUser prompts the user for confirmation.
+func PromptUser(question string) bool {
+	return promptUser(question + " (y/n): ")
+}
+
+// ApplyEdits applies the edits to the file content.
+func ApplyEdits(lines []string, edits []EditInstruction) ([]string, error) {
+	return applyEdits(lines, edits)
+}
+
+// WriteFileLines writes the lines to a file at the given path.
+func WriteFileLines(path string, lines []string) error {
+	return writeFileLines(path, lines)
 }

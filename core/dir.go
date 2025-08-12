@@ -61,7 +61,7 @@ func buildDirectoryTree(path string, include, exclude []string) (DirectoryTree, 
 				Path:     path,
 				Name:     info.Name(),
 				IsFile:   true,
-				IsBinary: isBinary(path),
+				IsBinary: IsBinary(path),
 				Size:     info.Size(),
 			},
 			nil

@@ -38,9 +38,9 @@ func deleteFile(path string) error {
 	return os.Remove(path)
 }
 
-// isBinary checks if a file is likely binary by reading its first 1024 bytes
+// IsBinary checks if a file is likely binary by reading its first 1024 bytes
 // and checking for the presence of null bytes.
-func isBinary(path string) bool {
+func IsBinary(path string) bool {
 	file, err := os.Open(path)
 	if err != nil {
 		return false // Or handle error appropriately
